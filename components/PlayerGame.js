@@ -299,7 +299,6 @@ export default function PlayerGame() {
       <h2 className="text-2xl font-bold mb-4">Game</h2>
       <p>Player: {player.name}</p>
       <p>Team: {team.name}</p>
-      <p>Score: {totalScore}</p>
       <p>
         Time Left: {Math.floor(timeLeft / 60)}:
         {(timeLeft % 60).toString().padStart(2, "0")}
@@ -307,6 +306,7 @@ export default function PlayerGame() {
       <p>
         Categories Completed: {completedCategories.length} / {TOTAL_CATEGORIES}
       </p>
+      <p>Current Score: {totalScore}</p>
       <div className="grid grid-cols-4 gap-4 mt-4">
         {grid.map((item) => (
           <button
