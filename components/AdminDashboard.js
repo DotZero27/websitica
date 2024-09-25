@@ -265,7 +265,7 @@ export default function AdminDashboard() {
         />
         <div className="my-4">
           <h4 className="font-semibold mb-2">Select 4 Categories:</h4>
-          <div className="flex flex-wrap gap-2">
+          <div className="max-w-4xl grid grid-cols-4 gap-4">
             {categories.map((category) => (
               <button
                 key={category}

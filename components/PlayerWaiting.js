@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "./ui/button";
 import { motion } from "framer-motion";
+import UnderwaterBackground from "./UndergroundBackground";
 
 const easing = [0.22, 1, 0.36, 1];
 
@@ -54,8 +55,11 @@ export default function PlayerWaiting({
       exit="exit"
       variants={variants}
       transition={{ duration: 0.4, type: "easeInOut" }}
-      className="min-h-screen flex items-center justify-center p-8 relative lg:flex-row bg-gradient-to-br from-blue-300 to-blue-600 overflow-hidden"
+      className="min-h-screen flex relative lg:flex-row bg-gradient-to-br from-blue-300 to-blue-600 overflow-hidden"
     >
+      <UnderwaterBackground/>
+      <div className="w-full flex items-center justify-center p-8 backdrop-blur-sm">
+
       {/* {upcomingSession && (
         <p className="mb-8">
           Next session starts at:{" "}
@@ -107,6 +111,9 @@ export default function PlayerWaiting({
           </Button>
         </CardFooter>
       </Card>
+
+      </div>
+
     </motion.div>
   );
 }

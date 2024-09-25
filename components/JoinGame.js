@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,8 +12,28 @@ const schema = z.object({
   teamName: z.string().min(2, "Team name must be at least 2 characters"),
 });
 
+const BUBBLE_COUNT = 150;
+const BUBBLE_SPAWN_INTERVAL = 0; // ms
+
+const Bubble = ({ size, left, duration, onComplete }) => (
+  <motion.div
+    className="absolute rounded-full bg-blue-200"
+    style={{
+      width: size,
+      height: size,
+      left: left,
+      bottom: "-50px", // Start slightly below the screen
+    }}
+    initial={{ y: 0, opacity: 0.2 }}
+    animate={{ y: "-200vh", opacity: 0.7 }} // Animate to above the viewport
+    transition={{ duration: duration, ease: "linear" }}
+    onAnimationComplete={onComplete}
+  />
+);
+
 export default function JoinGame() {
   const [animationStep, setAnimationStep] = useState(0);
+  const [bubbles, setBubbles] = useState([]);
 
   const router = useRouter();
 
@@ -87,6 +107,37 @@ export default function JoinGame() {
     joinGame(data.playerName, data.teamName);
   };
 
+  const createBubble = useCallback(() => {
+    const size = Math.random() * 50 + 10;
+    const left = Math.random() * 100;
+    const duration = 5 + Math.random() * 10;
+
+    return {
+      id: Math.random(),
+      size: `${size}px`,
+      left: `${left}%`,
+      duration: duration,
+    };
+  }, []);
+
+  const removeBubble = useCallback((id) => {
+    setBubbles((prevBubbles) =>
+      prevBubbles.filter((bubble) => bubble.id !== id)
+    );
+  }, []);
+
+  useEffect(() => {
+    const spawnBubble = () => {
+      if (bubbles.length < BUBBLE_COUNT) {
+        setBubbles((prevBubbles) => [...prevBubbles, createBubble()]);
+      }
+    };
+
+    const interval = setInterval(spawnBubble, BUBBLE_SPAWN_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [bubbles.length, createBubble]);
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-white">
       {/* Animated Background */}
@@ -102,9 +153,21 @@ export default function JoinGame() {
         }}
         transition={{ duration: 2, ease: [0.32, 0, 0.67, 0] }}
       />
+
+      {/* Bubbles */}
+      {bubbles.map((bubble) => (
+        <Bubble
+          key={bubble.id}
+          size={bubble.size}
+          left={bubble.left}
+          duration={bubble.duration}
+          onComplete={() => removeBubble(bubble.id)}
+        />
+      ))}
+
       <AnimatePresence>
         {/* Text Container */}
-        <div className="w-full flex flex-col items-center justify-center relative z-10 min-h-screen">
+        <div className="w-full flex flex-col items-center justify-center relative z-10 min-h-screen backdrop-blur-sm">
           {/* CODECTIONS Heading with circular text color reveal */}
           <div className="relative">
             <h1 className="font-spicyRice text-7xl font-bold text-center text-[#0D52A0]">
@@ -142,7 +205,8 @@ export default function JoinGame() {
               <input
                 {...register("playerName")}
                 placeholder="Enter your name"
-                className="border p-2 w-full rounded text-black"
+                className="border px-4 p-2 w-full rounded-full text-black focus:outline-primary"
+                autocomplete="off"
               />
               {errors.playerName && (
                 <p className="text-red-500 text-sm mt-1">
@@ -154,7 +218,8 @@ export default function JoinGame() {
               <input
                 {...register("teamName")}
                 placeholder="Enter team name"
-                className="border p-2 w-full rounded text-black"
+                className="border px-4 p-2 w-full rounded-full text-black focus:outline-primary"
+                autocomplete="off"
               />
               {errors.teamName && (
                 <p className="text-red-500 text-sm mt-1">
@@ -164,7 +229,7 @@ export default function JoinGame() {
             </div>
             <button
               type="submit"
-              className="bg-primary text-white hover:bg-primary/80 font-bold py-2 px-4 rounded w-full transition duration-300"
+              className="bg-primary text-white hover:bg-primary/80 font-bold py-2 px-4 rounded-full w-full transition duration-300"
             >
               Join Game
             </button>

@@ -15,7 +15,7 @@ const spicyRice = Spicy_Rice({
 });
 
 export const metadata = {
-  title: "Webstitica Admin",
+  title: "Websitica Admin",
   description: "admin",
 };
 

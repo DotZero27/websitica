@@ -63,17 +63,65 @@ export default function PlayerWaitingPage() {
     }
   };
 
-  useEffect(() => {
-    const playerData = JSON.parse(localStorage.getItem('playerData'));
-    const teamData = JSON.parse(localStorage.getItem('teamData'));
-    if (playerData && teamData) {
-      setPlayer(playerData);
-      setTeam(teamData);
-      checkSessionStatus(playerData.id);
-    } else {
-      router.push('/');
+  const verifyPlayerData = useCallback(async (playerData, teamData) => {
+    if (!playerData || !teamData) return false;
+
+    // Check if player exists in the database
+    const { data: playerDbData, error: playerError } = await supabase
+      .from("players")
+      .select("*")
+      .eq("id", playerData.id)
+      .single();
+
+    if (playerError || !playerDbData) {
+      console.error("Player not found in database:", playerError);
+      return false;
     }
-  }, [checkSessionStatus, router]);
+
+    // Check if team exists in the database
+    const { data: teamDbData, error: teamError } = await supabase
+      .from("teams")
+      .select("*")
+      .eq("id", teamData.id)
+      .single();
+
+    if (teamError || !teamDbData) {
+      console.error("Team not found in database:", teamError);
+      return false;
+    }
+
+    // Check if player is associated with the correct team
+    if (playerDbData.team_id !== teamDbData.id) {
+      console.error("Player-team association mismatch");
+      return false;
+    }
+
+    // Update local storage with fresh data from the database
+    localStorage.setItem('playerData', JSON.stringify(playerDbData));
+    localStorage.setItem('teamData', JSON.stringify(teamDbData));
+
+    setPlayer(playerDbData);
+    setTeam(teamDbData);
+
+    return true;
+  }, []);
+
+  useEffect(() => {
+    const initializePlayer = async () => {
+      const playerData = JSON.parse(localStorage.getItem('playerData'));
+      const teamData = JSON.parse(localStorage.getItem('teamData'));
+      
+      const isValid = await verifyPlayerData(playerData, teamData);
+      
+      if (isValid) {
+        checkSessionStatus(playerData.id);
+      } else {
+        handleLogout();
+      }
+    };
+
+    initializePlayer();
+  }, [checkSessionStatus, verifyPlayerData]);
 
   useEffect(() => {
     const subscription = supabase
@@ -97,11 +145,11 @@ export default function PlayerWaitingPage() {
     };
   }, [player, checkSessionStatus]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('playerData');
     localStorage.removeItem('teamData');
     router.push('/');
-  };
+  }, [router]);
 
   if (!player || !team) {
     return <div key="loading" className="min-h-screen">Loading...</div>;

@@ -5,6 +5,8 @@ import Image from "next/image";
 import Logo from "@/assets/SSN_IT_White.svg";
 import ThemeLogo from "@/assets/14-LifeBelowWater.jpg";
 import { useLatency } from "@/hooks/useLatency";
+import { cn } from "@/lib/utils";
+import { Dot } from "lucide-react";
 
 const LOADING_DURATION = 1500;
 
@@ -116,14 +118,13 @@ export default function Loader({ onLoadComplete }) {
           </div>
           <div className="text-3xl flex items-end">
             <motion.div
-              className="flex"
+              className="flex gap-2"
               variants={dotsContainerVariants}
               initial="hidden"
               animate="visible"
             >
-              {[0, 1, 2].map((index) => (
-                <motion.span key={index} variants={dotVariants} className="w-3">
-                  .
+              {["bg-gradient-to-br from-green-400 to-green-600" ,"bg-gradient-to-br from-yellow-400 to-yellow-600","bg-gradient-to-br from-red-400 to-red-700",  "bg-gradient-to-br from-purple-500 to-violet-800"].map((color,index) => (
+                <motion.span key={index} variants={dotVariants} className={cn("w-3 h-3 rounded-full border-2 border-white",color)}>
                 </motion.span>
               ))}
             </motion.div>
