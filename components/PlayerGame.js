@@ -1,38 +1,30 @@
-"use client";
-import { supabase } from "@/lib/client";
 import { useState, useEffect } from "react";
+import { supabase } from "@/lib/client";
 
-const GAME_DURATION = 60; // 1 minute in seconds
+const QUESTION_DURATION = 300; // 5 minutes in seconds
 const TOTAL_CATEGORIES = 4;
-const POINTS_POSSIBLE = 1000; // Points possible for each category
+const POINTS_POSSIBLE = 1000;
 
-export default function PlayerGame() {
-  const [player, setPlayer] = useState(null);
-  const [team, setTeam] = useState(null);
+const categoryColors = {
+  "Programming Languages": "bg-purple-700",
+  "Frontend Frameworks": "bg-blue-600",
+  Databases: "bg-green-600",
+  "Version Control": "bg-orange-600",
+};
+
+export default function PlayerGame({ player, team, onGameEnd }) {
   const [currentSession, setCurrentSession] = useState(null);
   const [grid, setGrid] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [completedCategories, setCompletedCategories] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
-  const [gameStatus, setGameStatus] = useState("waiting"); // 'waiting', 'active', 'completed'
-  const [categoryStartTime, setCategoryStartTime] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(QUESTION_DURATION);
+  const [gameStatus, setGameStatus] = useState("waiting");
+  const [questionStartTime, setQuestionStartTime] = useState(null);
   const [totalScore, setTotalScore] = useState(0);
 
   useEffect(() => {
-    if (player && team) {
-      subscribeToUpdates();
-    }
-  }, [player, team]);
-
-  useEffect(() => {
-    if (
-      currentSession &&
-      currentSession.status === "active" &&
-      gameStatus === "waiting"
-    ) {
-      startGame();
-    }
-  }, [currentSession]);
+    checkAndStartGame();
+  }, []);
 
   useEffect(() => {
     let timer;
@@ -46,119 +38,92 @@ export default function PlayerGame() {
     return () => clearInterval(timer);
   }, [gameStatus, timeLeft]);
 
-  const subscribeToUpdates = () => {
-    const subscription = supabase
-      .channel("quiz_sessions")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "quiz_sessions" },
-        (payload) => {
-          if (
-            payload.eventType === "INSERT" ||
-            payload.eventType === "UPDATE"
-          ) {
-            setCurrentSession(payload.new);
-          }
-        }
-      )
-      .subscribe();
+  const checkAndStartGame = async () => {
+    const { data: sessionData } = await supabase
+      .from("quiz_sessions")
+      .select("*")
+      .eq("status", "active")
+      .order("start_time", { ascending: false })
+      .limit(1)
+      .single();
 
-    return () => {
-      supabase.removeSubscription(subscription);
-    };
+    if (sessionData) {
+      setCurrentSession(sessionData);
+
+      // Check if player has already submitted for this session
+      const { data: submissionData } = await supabase
+        .from("submissions")
+        .select("*")
+        .eq("player_id", player.id)
+        .eq("session_id", sessionData.id)
+        .limit(1)
+        .single();
+
+      if (submissionData) {
+        // Player has already completed this session, return to waiting room
+        onGameEnd();
+      } else {
+        // Player hasn't completed this session, start the game
+        startGame(sessionData);
+      }
+    } else {
+      // No active session, return to waiting room
+      onGameEnd();
+    }
   };
 
-  const startGame = () => {
-    fetchNewGrid();
+  const startGame = async (sessionData) => {
+    await fetchNewGrid(sessionData);
     setGameStatus("active");
-    setTimeLeft(GAME_DURATION);
+    setTimeLeft(QUESTION_DURATION);
+    setQuestionStartTime(Date.now());
     setCompletedCategories([]);
     setTotalScore(0);
-    setCategoryStartTime(Date.now());
-  };
-
-  const endGame = async () => {
-    setGameStatus("completed");
-    await submitResult(totalScore);
-    await updateTeamScore(totalScore);
   };
 
   const calculateScore = (responseTime) => {
-    const timeFraction = responseTime / (GAME_DURATION / TOTAL_CATEGORIES);
+    const timeFraction = responseTime / QUESTION_DURATION;
     const scoreMultiplier = 1 - timeFraction / 2;
-    const score = Math.round(POINTS_POSSIBLE * scoreMultiplier);
-    return Math.max(0, score); // Ensure score is not negative
+    const calculatedScore = Math.round(POINTS_POSSIBLE * scoreMultiplier);
+    return Math.max(0, calculatedScore);
   };
 
-  const joinGame = async (playerName, teamName) => {
-    // Check if team exists, if not create it
-    let { data: teamData, error: teamError } = await supabase
-      .from("teams")
-      .select("*")
-      .eq("name", teamName)
-      .single();
+  const fetchNewGrid = async (sessionData) => {
+    const categories = [
+      sessionData.category1,
+      sessionData.category2,
+      sessionData.category3,
+      sessionData.category4,
+    ].filter(Boolean);
 
-    if (teamError && teamError.code === "PGRST116") {
-      // Team doesn't exist, create it
-      const { data, error } = await supabase
-        .from("teams")
-        .insert({ name: teamName, score: 0 })
-        .select()
-        .single();
+    const { data: words, error } = await supabase
+      .from("words")
+      .select("word, category")
+      .in("category", categories);
 
-      if (error) {
-        console.error("Error creating team:", error);
-        return;
-      }
-      teamData = data;
-    } else if (teamError) {
-      console.error("Error fetching team:", teamError);
+    if (error) {
+      console.error("Error fetching words:", error);
       return;
     }
 
-    // Create player
-    const { data: playerData, error: playerError } = await supabase
-      .from("players")
-      .insert({ name: playerName, team_id: teamData.id })
-      .select()
-      .single();
+    const newGrid = categories.flatMap(category => {
+      const categoryWords = words.filter(word => word.category === category);
+      return categoryWords
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 4)
+        .map((word, index) => ({
+          id: `${category}-${index}`,
+          text: word.word,
+          category: word.category
+        }));
+    });
 
-    if (playerError) {
-      console.error("Error creating player:", playerError);
-      return;
-    }
-
-    setPlayer(playerData);
-    setTeam(teamData);
-
-    await updateTeamPlayerCount(teamData.id, 1);
-  };
-
-  const fetchNewGrid = async () => {
-    // In a real app, you'd fetch this from your backend or Supabase
-    const newGrid = [
-      { id: 1, text: "Python", category: "Programming Languages" },
-      { id: 2, text: "JavaScript", category: "Programming Languages" },
-      { id: 3, text: "Ruby", category: "Programming Languages" },
-      { id: 4, text: "Java", category: "Programming Languages" },
-      { id: 5, text: "React", category: "Frontend Frameworks" },
-      { id: 6, text: "Vue", category: "Frontend Frameworks" },
-      { id: 7, text: "Angular", category: "Frontend Frameworks" },
-      { id: 8, text: "Svelte", category: "Frontend Frameworks" },
-      { id: 9, text: "MongoDB", category: "Databases" },
-      { id: 10, text: "PostgreSQL", category: "Databases" },
-      { id: 11, text: "MySQL", category: "Databases" },
-      { id: 12, text: "SQLite", category: "Databases" },
-      { id: 13, text: "Git", category: "Version Control" },
-      { id: 14, text: "SVN", category: "Version Control" },
-      { id: 15, text: "Mercurial", category: "Version Control" },
-      { id: 16, text: "Perforce", category: "Version Control" },
-    ];
     setGrid(newGrid.sort(() => Math.random() - 0.5));
   };
 
   const handleItemClick = (item) => {
-    if (gameStatus !== "active") return;
+    if (gameStatus !== "active" || completedCategories.includes(item.category))
+      return;
 
     if (selectedItems.includes(item)) {
       setSelectedItems(selectedItems.filter((i) => i !== item));
@@ -176,126 +141,100 @@ export default function PlayerGame() {
     const isCorrect = items.every((item) => item.category === category);
 
     if (isCorrect && !completedCategories.includes(category)) {
-      const responseTime = (Date.now() - categoryStartTime) / 1000; // Convert to seconds
-      const score = calculateScore(responseTime);
+      const responseTime = (Date.now() - questionStartTime) / 1000; // Convert to seconds
+      const categoryScore = calculateScore(responseTime);
 
-      setTotalScore((prevScore) => prevScore + score);
+      setTotalScore((prevScore) => prevScore + categoryScore);
       setCompletedCategories([...completedCategories, category]);
-      setGrid(grid.filter((item) => !items.includes(item)));
+
+      // Reorder the grid to move the completed category to the top
+      const newGrid = [
+        ...grid.filter((item) => item.category === category),
+        ...grid.filter((item) => item.category !== category),
+      ];
+      setGrid(newGrid);
+
       setSelectedItems([]);
-      setCategoryStartTime(Date.now()); // Reset for next category
 
       if (completedCategories.length + 1 === TOTAL_CATEGORIES) {
-        endGame();
+        endGame(totalScore + categoryScore);
       }
     } else {
       setSelectedItems([]);
     }
   };
 
-  const submitResult = async (score) => {
+  const endGame = async (finalScore) => {
+    setGameStatus("completed");
+    await submitResult(finalScore);
+    onGameEnd();
+  };
+
+  const submitResult = async (finalScore) => {
     if (!player || !team || !currentSession) {
       console.error("Missing player, team, or session data");
       return;
     }
 
-    const { error } = await supabase
-      .from("submissions")
-      .insert({
-        player_id: player.id,
-        team_id: team.id,
-        session_id: currentSession.id,
-        is_correct: score === TOTAL_CATEGORIES,
-        submitted_at: new Date().toISOString(),
-      })
-      .single();
+    const { error } = await supabase.from("submissions").insert({
+      player_id: player.id,
+      team_id: team.id,
+      session_id: currentSession.id,
+      is_correct: completedCategories.length === TOTAL_CATEGORIES,
+      submitted_at: new Date().toISOString(),
+      score: finalScore,
+    });
 
     if (error) {
       console.error("Error submitting result:", error);
     }
   };
 
-  const updateTeamScore = async (score) => {
-    const { error } = await supabase
-      .from("teams")
-      .update({ score: team.score + score })
-      .eq("id", team.id);
-
-    if (error) {
-      console.error("Error updating team score:", error);
-    }
-  };
-
-  const updateTeamPlayerCount = async (teamId, increment) => {
-    const { error } = await supabase.rpc("update_team_player_count", {
-      team_id: teamId,
-      increment: increment,
-    });
-
-    if (error) {
-      console.error("Error updating team player count:", error);
-    }
-  };
-
-  if (!player || !team) {
-    return (
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Join Game</h2>
-        <input
-          type="text"
-          id="playerName"
-          placeholder="Enter your name"
-          className="border p-2 mr-2"
-        />
-        <input
-          type="text"
-          id="teamName"
-          placeholder="Enter team name"
-          className="border p-2 mr-2"
-        />
-        <button
-          onClick={() =>
-            joinGame(
-              document.getElementById("playerName").value,
-              document.getElementById("teamName").value
-            )
-          }
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+  const renderCompletedCategories = () => {
+    return completedCategories.map((category) => {
+      const categoryItems = grid.filter((item) => item.category === category);
+      return (
+        <div
+          key={category}
+          className={`flex flex-col items-center justify-center w-full mb-4 py-4 text-white rounded uppercase ${categoryColors[category] || 'bg-gray-600'}`}
         >
-          Join Game
-        </button>
+          <h3 className="text-lg font-bold mb-2">{category}</h3>
+          <p>{categoryItems.map((item) => item.text).join(", ")}</p>
+        </div>
+      );
+    });
+  };
+
+  const renderRemainingGrid = () => {
+    const remainingItems = grid.filter(
+      (item) => !completedCategories.includes(item.category)
+    );
+    return (
+      <div className="grid grid-cols-4 gap-4 mt-4">
+        {remainingItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => handleItemClick(item)}
+            className={`p-2 border ${
+              selectedItems.includes(item) ? "bg-yellow-200" : "bg-white"
+            } ${
+              gameStatus !== "active" ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={gameStatus !== "active"}
+          >
+            {item.text}
+          </button>
+        ))}
       </div>
     );
-  }
+  };
 
   if (gameStatus === "waiting") {
-    return (
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Waiting for next session</h2>
-        <p>Player: {player.name}</p>
-        <p>Team: {team.name}</p>
-      </div>
-    );
-  }
-
-  if (gameStatus === "completed") {
-    return (
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Game Completed</h2>
-        <p>Player: {player.name}</p>
-        <p>Team: {team.name}</p>
-        <p>Score: {totalScore}</p>
-        <p>
-          Categories Completed: {completedCategories.length} /{" "}
-          {TOTAL_CATEGORIES}
-        </p>
-        <p>Score: {completedCategories.length}</p>
-      </div>
-    );
+    return <div>Waiting for the game to start...</div>;
   }
 
   return (
-    <div>
+    <div className="min-h-screen max-w-xl flex flex-col mt-12 mx-auto px-4">
       <h2 className="text-2xl font-bold mb-4">Game</h2>
       <p>Player: {player.name}</p>
       <p>Team: {team.name}</p>
@@ -307,19 +246,19 @@ export default function PlayerGame() {
         Categories Completed: {completedCategories.length} / {TOTAL_CATEGORIES}
       </p>
       <p>Current Score: {totalScore}</p>
-      <div className="grid grid-cols-4 gap-4 mt-4">
-        {grid.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => handleItemClick(item)}
-            className={`p-2 border ${
-              selectedItems.includes(item) ? "bg-blue-200" : "bg-white"
-            }`}
-          >
-            {item.text}
-          </button>
-        ))}
-      </div>
+
+      <div className="mt-4">{renderCompletedCategories()}</div>
+
+      {renderRemainingGrid()}
+
+      {gameStatus === "completed" && (
+        <div className="mt-4">
+          <p>Game completed. Final Score: {totalScore}</p>
+          <p>
+            Categories Found: {completedCategories.length} / {TOTAL_CATEGORIES}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import Home from "@/components/Home";
+import JoinGame from "@/components/JoinGame";
 
 export default function Page() {
-  return <Home/>
+  return <JoinGame />;
 }
