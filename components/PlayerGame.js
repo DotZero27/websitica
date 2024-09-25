@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/client";
+import { Loader2 } from "lucide-react";
 
 const QUESTION_DURATION = 300; // 5 minutes in seconds
 const TOTAL_CATEGORIES = 4;
@@ -106,15 +107,15 @@ export default function PlayerGame({ player, team, onGameEnd }) {
       return;
     }
 
-    const newGrid = categories.flatMap(category => {
-      const categoryWords = words.filter(word => word.category === category);
+    const newGrid = categories.flatMap((category) => {
+      const categoryWords = words.filter((word) => word.category === category);
       return categoryWords
         .sort(() => Math.random() - 0.5)
         .slice(0, 4)
         .map((word, index) => ({
           id: `${category}-${index}`,
           text: word.word,
-          category: word.category
+          category: word.category,
         }));
     });
 
@@ -196,7 +197,9 @@ export default function PlayerGame({ player, team, onGameEnd }) {
       return (
         <div
           key={category}
-          className={`flex flex-col items-center justify-center w-full mb-4 py-4 text-white rounded uppercase ${categoryColors[category] || 'bg-gray-600'}`}
+          className={`flex flex-col items-center justify-center w-full mb-4 py-4 text-white rounded uppercase ${
+            categoryColors[category] || "bg-gray-600"
+          }`}
         >
           <h3 className="text-lg font-bold mb-2">{category}</h3>
           <p>{categoryItems.map((item) => item.text).join(", ")}</p>
@@ -210,13 +213,13 @@ export default function PlayerGame({ player, team, onGameEnd }) {
       (item) => !completedCategories.includes(item.category)
     );
     return (
-      <div className="grid grid-cols-4 gap-4 mt-4">
+      <div className="grid grid-cols-4 gap-4 mt-4 text-black" >
         {remainingItems.map((item) => (
           <button
             key={item.id}
             onClick={() => handleItemClick(item)}
-            className={`p-2 border ${
-              selectedItems.includes(item) ? "bg-yellow-200" : "bg-white"
+            className={`px-4 py-6 rounded-md ${
+              selectedItems.includes(item) ? "bg-yellow-200" : "bg-white/80 backdrop-blur-sm"
             } ${
               gameStatus !== "active" ? "opacity-50 cursor-not-allowed" : ""
             }`}
@@ -230,22 +233,29 @@ export default function PlayerGame({ player, team, onGameEnd }) {
   };
 
   if (gameStatus === "waiting") {
-    return <div>Waiting for the game to start...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="p-8 text-blue-600 flex items-center rounded max-w-md gap-8 bg-white/80 backdrop-blur-sm">
+          <div className="text-lg">Waiting for the game to start...</div>
+          <Loader2 className="w-8 h-8 animate-spin" />
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen max-w-xl flex flex-col mt-12 mx-auto px-4">
-      <h2 className="text-2xl font-bold mb-4">Game</h2>
+    <div className="text-white min-h-screen max-w-2xl flex flex-col mt-12 mx-auto px-4">
+      <h2 className="text-4xl font-spicyRice font-bold mb-4 uppercase">Codections</h2>
       <p>Player: {player.name}</p>
       <p>Team: {team.name}</p>
       <p>
         Time Left: {Math.floor(timeLeft / 60)}:
         {(timeLeft % 60).toString().padStart(2, "0")}
       </p>
-      <p>
+      {/* <p>
         Categories Completed: {completedCategories.length} / {TOTAL_CATEGORIES}
       </p>
-      <p>Current Score: {totalScore}</p>
+      <p>Current Score: {totalScore}</p> */}
 
       <div className="mt-4">{renderCompletedCategories()}</div>
 
