@@ -3,6 +3,7 @@ import { supabase } from "@/lib/client";
 import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import Logout from "./Logout";
 
 export default function AdminDashboard() {
   const [teams, setTeams] = useState([]);
@@ -92,32 +93,32 @@ export default function AdminDashboard() {
 
   const handleSubmissionInsert = async (payload) => {
     const { session_id, team_id, score } = payload.new;
-  
+
     // Fetch the team data directly from the database
     const { data: teamData, error: teamError } = await supabase
-      .from('teams')
-      .select('name')
-      .eq('id', team_id)
+      .from("teams")
+      .select("name")
+      .eq("id", team_id)
       .limit(1)
       .single();
-  
+
     if (teamError) {
-      console.error('Error fetching team data:', teamError);
+      console.error("Error fetching team data:", teamError);
       return;
     }
-  
-    const teamName = teamData ? teamData.name : 'Unknown Team';
-  
+
+    const teamName = teamData ? teamData.name : "Unknown Team";
+
     setSessionScores((prevScores) => {
       const updatedScores = { ...prevScores };
       if (!updatedScores[session_id]) {
         updatedScores[session_id] = {};
       }
-      updatedScores[session_id][teamName] = 
+      updatedScores[session_id][teamName] =
         (updatedScores[session_id][teamName] || 0) + score;
       return updatedScores;
     });
-  
+
     // Add to real-time submissions
     setRealtimeSubmissions((prev) => [
       ...prev,
@@ -250,7 +251,10 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
+      <div className="flex w-full justify-between items-center">
+        <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
+        <Logout />
+      </div>
 
       <div className="mb-8">
         <h3 className="text-xl font-semibold mb-2">Create New Session</h3>
