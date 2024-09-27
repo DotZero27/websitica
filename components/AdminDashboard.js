@@ -91,7 +91,7 @@ export default function AdminDashboard() {
   };
 
   const handleSubmissionInsert = async (payload) => {
-    const { session_id, team_id, score, player_id } = payload.new;
+    const { session_id, team_id, score } = payload.new;
   
     // Fetch the team data directly from the database
     const { data: teamData, error: teamError } = await supabase
@@ -117,8 +117,6 @@ export default function AdminDashboard() {
         (updatedScores[session_id][teamName] || 0) + score;
       return updatedScores;
     });
-  
-    console.log({ teamName, score, timestamp: new Date().toLocaleString() });
   
     // Add to real-time submissions
     setRealtimeSubmissions((prev) => [

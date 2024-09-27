@@ -12,7 +12,7 @@ import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import UnderwaterBackground from "./UndergroundBackground";
 
-const QUESTION_DURATION = 3000; // 5 minutes in seconds
+const QUESTION_DURATION = 60; // 5 minutes in seconds
 const TOTAL_CATEGORIES = 4;
 const POINTS_POSSIBLE = 1000;
 const MAX_LIVES = 4;
@@ -24,7 +24,6 @@ const categoryColors = {
   "Version Control": "bg-gradient-to-br from-green-400 to-green-600",
   "CSS Display Values": "bg-gradient-to-br from-green-400 to-green-600",
 };
-
 
 export default function PlayerGame({ player, team, onGameEnd }) {
   const [currentSession, setCurrentSession] = useState(null);
@@ -198,7 +197,7 @@ export default function PlayerGame({ player, team, onGameEnd }) {
     }
   };
 
-  const checkCategory = (items) => {
+  const checkCategory = async (items) => {
     const category = items[0].category;
     const isCorrect = items.every((item) => item.category === category);
 
@@ -206,30 +205,71 @@ export default function PlayerGame({ player, team, onGameEnd }) {
       const responseTime = (Date.now() - questionStartTime) / 1000; // Convert to seconds
       const categoryScore = calculateScore(responseTime);
 
-      setTotalScore((prevScore) => prevScore + categoryScore);
-      setCompletedCategories([...completedCategories, category]);
+      const newTotalScore = totalScore + categoryScore;
+      setTotalScore(newTotalScore);
 
-      // Reorder the grid to move the completed category to the top
+      const newCompletedCategories = [...completedCategories, category];
+      setCompletedCategories(newCompletedCategories);
+
+      // Update the team's score in the database after each category completion
+      console.log('New Score: ' + categoryScore)
+      await updateTeamScore(categoryScore);
+
       const newGrid = [
         ...grid.filter((item) => item.category === category),
         ...grid.filter((item) => item.category !== category),
       ];
-      setGrid(newGrid);
 
+      setGrid(newGrid);
       setSelectedItems([]);
 
-      if (completedCategories.length + 1 === TOTAL_CATEGORIES) {
-        endGame(totalScore + categoryScore);
+      if (newCompletedCategories.length === TOTAL_CATEGORIES) {
+        endGame(newTotalScore);
       }
     } else {
-      setLives((prevLives) => prevLives - 1);
-      if (lives === 1) {
+      const newLives = lives - 1;
+      setLives(newLives);
+      if (newLives === 0) {
         endGame(totalScore);
       }
       setSelectedItems([]);
     }
   };
 
+  const updateTeamScore = async (scoreIncrement) => {
+    if (!team) {
+      console.error("Missing team data");
+      return;
+    }
+
+    // Fetch the current team score
+    const { data: currentTeamData, error: fetchError } = await supabase
+      .from("teams")
+      .select("score")
+      .eq("id", team.id)
+      .limit(1)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching team score:", fetchError);
+      return;
+    }
+
+    const newScore = (currentTeamData.score || 0) + scoreIncrement;
+
+    // Update the team's score
+    const { data, error } = await supabase
+      .from("teams")
+      .update({ score: newScore })
+      .eq("id", team.id);
+
+    if (error) {
+      console.error("Error updating team score:", error);
+    } else {
+      console.log("Team score updated successfully");
+    }
+  };
+  
   const endGame = async (finalScore) => {
     setGameStatus("completed");
     await submitResult(finalScore);
