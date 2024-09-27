@@ -12,17 +12,41 @@ import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import UnderwaterBackground from "./UndergroundBackground";
 
-const QUESTION_DURATION = 60; // 5 minutes in seconds
+const QUESTION_DURATION = 60; // 1 minute in seconds
 const TOTAL_CATEGORIES = 4;
 const POINTS_POSSIBLE = 1000;
 const MAX_LIVES = 4;
 
 const categoryColors = {
+  "Browser Dev Tools": "bg-gradient-to-br from-red-400 to-red-700",
+  "URL Components": "bg-gradient-to-br from-purple-500 to-violet-800",
+  "CSS Display Values": "bg-gradient-to-br from-yellow-400 to-yellow-600",
+  "Frontend Frameworks": "bg-gradient-to-br from-green-400 to-green-600",
+
   "Programming Languages": "bg-gradient-to-br from-red-400 to-red-700",
-  "Frontend Frameworks": "bg-gradient-to-br from-purple-500 to-violet-800",
-  Databases: "bg-gradient-to-br from-yellow-400 to-yellow-600",
-  "Version Control": "bg-gradient-to-br from-green-400 to-green-600",
-  "CSS Display Values": "bg-gradient-to-br from-green-400 to-green-600",
+  Databases: "bg-gradient-to-br from-purple-500 to-violet-800",
+  "Web APIs": "bg-gradient-to-br from-yellow-400 to-yellow-600",
+  "Web Security Threats": "bg-gradient-to-br from-green-400 to-green-600",
+
+  "API Authentication": "bg-gradient-to-br from-red-400 to-red-700",
+  "Mobile Frameworks": "bg-gradient-to-br from-purple-500 to-violet-800",
+  "CSS Units": "bg-gradient-to-br from-yellow-400 to-yellow-600",
+  "JavaScript Concepts": "bg-gradient-to-br from-green-400 to-green-600",
+
+  "Protocols": "bg-gradient-to-br from-red-400 to-red-700",
+  "Backend Frameworks": "bg-gradient-to-br from-purple-500 to-violet-800",
+  "Frontend Toolkits": "bg-gradient-to-br from-yellow-400 to-yellow-600",
+  "HTML Elements": "bg-gradient-to-br from-green-400 to-green-600",
+
+  "Version Control": "bg-gradient-to-br from-red-400 to-red-700",
+  "Database Concepts": "bg-gradient-to-br from-purple-500 to-violet-800",
+  "Cloud Providers": "bg-gradient-to-br from-yellow-400 to-yellow-600",
+  "Data Formats": "bg-gradient-to-br from-green-400 to-green-600",
+
+  "HTTP Methods": "bg-gradient-to-br from-red-400 to-red-700",
+  "Network Topologies": "bg-gradient-to-br from-purple-500 to-violet-800",
+  "SDLC Methods": "bg-gradient-to-br from-yellow-400 to-yellow-600",
+  "Software Testing Tools": "bg-gradient-to-br from-green-400 to-green-600",
 };
 
 export default function PlayerGame({ player, team, onGameEnd }) {
@@ -35,6 +59,7 @@ export default function PlayerGame({ player, team, onGameEnd }) {
   const [questionStartTime, setQuestionStartTime] = useState(null);
   const [totalScore, setTotalScore] = useState(0);
   const [lives, setLives] = useState(MAX_LIVES);
+  const [shakeHeart, setShakeHeart] = useState(false);
 
   useEffect(() => {
     checkAndStartGame();
@@ -212,7 +237,7 @@ export default function PlayerGame({ player, team, onGameEnd }) {
       setCompletedCategories(newCompletedCategories);
 
       // Update the team's score in the database after each category completion
-      console.log('New Score: ' + categoryScore)
+      console.log("New Score: " + categoryScore);
       await updateTeamScore(categoryScore);
 
       const newGrid = [
@@ -228,7 +253,12 @@ export default function PlayerGame({ player, team, onGameEnd }) {
       }
     } else {
       const newLives = lives - 1;
+      setShakeHeart(true);
+      setTimeout(() => {
+        setShakeHeart(false);
+      }, 500);
       setLives(newLives);
+
       if (newLives === 0) {
         endGame(totalScore);
       }
@@ -269,7 +299,7 @@ export default function PlayerGame({ player, team, onGameEnd }) {
       console.log("Team score updated successfully");
     }
   };
-  
+
   const endGame = async (finalScore) => {
     setGameStatus("completed");
     await submitResult(finalScore);
@@ -341,9 +371,11 @@ export default function PlayerGame({ player, team, onGameEnd }) {
         {[...Array(MAX_LIVES)].map((_, index) => (
           <Heart
             key={index}
-            className={`w-10 h-10 ${
-              index < lives ? "fill-red-500 text-white" : "text-gray-300"
-            }`}
+            className={cn(
+              `w-10 h-10`,
+              index < lives ? "fill-red-500 text-white" : "text-gray-300",
+              index === lives && shakeHeart && "animate-shake"
+            )}
           />
         ))}
       </div>
