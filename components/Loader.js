@@ -3,10 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
 import Logo from "@/assets/SSN_IT_White.svg";
-import ThemeLogo from "@/assets/14-LifeBelowWater.jpg";
 import { useLatency } from "@/hooks/useLatency";
 import { cn } from "@/lib/utils";
-import { Dot } from "lucide-react";
 
 const LOADING_DURATION = 1500;
 
@@ -96,7 +94,8 @@ export default function Loader({ onLoadComplete }) {
       {isLoading && (
         <motion.div
           key="main-loader"
-          className="font-spicyRice text-white flex flex-col items-center justify-center fixed inset-0 z-50 text-7xl bg-gradient-to-br from-blue-300 to-blue-600"
+          className="font-spicyRice flex flex-col items-center justify-center fixed inset-0 z-50 text-7xl 
+                     text-industrial-steam bg-gradient-to-br from-industrial-charcoal to-industrial-coal"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -105,17 +104,22 @@ export default function Loader({ onLoadComplete }) {
           <div className="absolute top-12 left-12">
             <Image src={Logo} className="w-40 antialiased" alt="logo" />
           </div>
-          <div className="text-lg absolute bottom-12 right-12">
+          <div className="text-lg absolute bottom-12 right-12 text-industrial-smoke">
             {status} {latency > 0 && `(${latency.toFixed(0)}ms)`}
           </div>
 
-          <div className="flex mb-4">
+          <div className="flex mb-4 drop-shadow-md">
             {text.split("").map((letter, index) => (
-              <motion.span key={index} variants={letterVariants}>
+              <motion.span
+                key={index}
+                variants={letterVariants}
+                className="text-industrial-copper"
+              >
                 {letter}
               </motion.span>
             ))}
           </div>
+
           <div className="text-3xl flex items-end">
             <motion.div
               className="flex gap-2"
@@ -123,13 +127,23 @@ export default function Loader({ onLoadComplete }) {
               initial="hidden"
               animate="visible"
             >
-              {["bg-gradient-to-br from-green-400 to-green-600" ,"bg-gradient-to-br from-yellow-400 to-yellow-600","bg-gradient-to-br from-red-400 to-red-700",  "bg-gradient-to-br from-purple-500 to-violet-800"].map((color,index) => (
-                <motion.span key={index} variants={dotVariants} className={cn("w-3 h-3 rounded-full border-2 border-white",color)}>
-                </motion.span>
+              {[
+                "bg-gradient-to-br from-industrial-fire to-industrial-rust",
+                "bg-gradient-to-br from-industrial-brass to-industrial-copper",
+                "bg-gradient-to-br from-industrial-steel to-industrial-iron",
+                "bg-gradient-to-br from-industrial-smoke to-industrial-steam",
+              ].map((color, index) => (
+                <motion.span
+                  key={index}
+                  variants={dotVariants}
+                  className={cn(
+                    "w-3 h-3 rounded-full border-2 border-industrial-charcoal shadow-md",
+                    color
+                  )}
+                />
               ))}
             </motion.div>
           </div>
-          {/* <Image src={ThemeLogo} className="w-40 antialiased" alt="logo" /> */}
         </motion.div>
       )}
     </AnimatePresence>
