@@ -1,39 +1,24 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/lib/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { 
+  InteractiveGear, 
+  IndustrialGauge, 
+  FloatingCog 
+} from "@/components/InteractiveIndustrialElements";
 
 const schema = z.object({
   playerName: z.string().min(2, "Player name must be at least 2 characters"),
   teamName: z.string().min(2, "Team name must be at least 2 characters"),
 });
 
-const BUBBLE_COUNT = 150;
-const BUBBLE_SPAWN_INTERVAL = 0; // ms
-
-const Bubble = ({ size, left, duration, onComplete }) => (
-  <motion.div
-    className="absolute rounded-full bg-blue-200"
-    style={{
-      width: size,
-      height: size,
-      left: left,
-      bottom: "-50px", // Start slightly below the screen
-    }}
-    initial={{ y: 0, opacity: 0.2 }}
-    animate={{ y: "-200vh", opacity: 0.7 }} // Animate to above the viewport
-    transition={{ duration: duration, ease: "linear" }}
-    onAnimationComplete={onComplete}
-  />
-);
-
 export default function JoinGame() {
   const [animationStep, setAnimationStep] = useState(0);
-  const [bubbles, setBubbles] = useState([]);
 
   const router = useRouter();
 
@@ -107,43 +92,14 @@ export default function JoinGame() {
     joinGame(data.playerName, data.teamName);
   };
 
-  const createBubble = useCallback(() => {
-    const size = Math.random() * 50 + 10;
-    const left = Math.random() * 100;
-    const duration = 5 + Math.random() * 10;
 
-    return {
-      id: Math.random(),
-      size: `${size}px`,
-      left: `${left}%`,
-      duration: duration,
-    };
-  }, []);
-
-  const removeBubble = useCallback((id) => {
-    setBubbles((prevBubbles) =>
-      prevBubbles.filter((bubble) => bubble.id !== id)
-    );
-  }, []);
-
-  useEffect(() => {
-    const spawnBubble = () => {
-      if (bubbles.length < BUBBLE_COUNT) {
-        setBubbles((prevBubbles) => [...prevBubbles, createBubble()]);
-      }
-    };
-
-    const interval = setInterval(spawnBubble, BUBBLE_SPAWN_INTERVAL);
-
-    return () => clearInterval(interval);
-  }, [bubbles.length, createBubble]);
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-white">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-industrial-steam">
       {/* Animated Background */}
       <motion.div
         key="join-game"
-        className="absolute inset-0 bg-gradient-to-br from-blue-300 to-blue-600"
+        className="absolute inset-0 bg-gradient-to-br from-industrial-charcoal to-industrial-coal"
         initial={{ clipPath: "circle(0% at 100% 100%)" }}
         animate={{
           clipPath:
@@ -154,27 +110,38 @@ export default function JoinGame() {
         transition={{ duration: 2, ease: [0.32, 0, 0.67, 0] }}
       />
 
-      {/* Bubbles */}
-      {bubbles.map((bubble) => (
-        <Bubble
-          key={bubble.id}
-          size={bubble.size}
-          left={bubble.left}
-          duration={bubble.duration}
-          onComplete={() => removeBubble(bubble.id)}
-        />
-      ))}
+      {/* Interactive Industrial Elements */}
+      
+      {/* Large Rotating Gears - Better positioned */}
+      <InteractiveGear size={120} x={2} y={10} baseSpeed={1} color="copper" />
+      <InteractiveGear size={100} x={85} y={15} baseSpeed={1.5} color="brass" />
+      <InteractiveGear size={80} x={8} y={78} baseSpeed={2} color="steel" />
+      <InteractiveGear size={90} x={88} y={75} baseSpeed={1.2} color="iron" />
+      
+      {/* Industrial Gauges */}
+      <IndustrialGauge x={90} y={5} size={80} />
+      <IndustrialGauge x={5} y={2} size={70} />
+      
+      {/* Floating Cogs - Well distributed across screen */}
+      <FloatingCog initialX={18} initialY={35} size={35} />
+      <FloatingCog initialX={75} initialY={28} size={40} />
+      <FloatingCog initialX={12} initialY={58} size={30} />
+      <FloatingCog initialX={85} initialY={55} size={45} />
+      <FloatingCog initialX={35} initialY={15} size={25} />
+      <FloatingCog initialX={65} initialY={88} size={35} />
+      <FloatingCog initialX={45} initialY={20} size={28} />
+      <FloatingCog initialX={55} initialY={75} size={32} />
 
       <AnimatePresence>
         {/* Text Container */}
-        <div className="w-full flex flex-col items-center justify-center relative z-10 min-h-screen backdrop-blur-sm">
+        <div className="w-full flex flex-col items-center justify-center relative z-10 min-h-screen">
           {/* CODECTIONS Heading with circular text color reveal */}
           <div className="relative">
-            <h1 className="font-spicyRice text-7xl font-bold text-center text-[#0D52A0]">
+            <h1 className="font-industrial text-8xl font-bold text-center text-industrial-copper tracking-wider">
               CODECTIONS
             </h1>
             <motion.div
-              className="absolute inset-0 text-white"
+              className="absolute inset-0 text-industrial-steam"
               initial={{ clipPath: "circle(0% at 100% 100%)" }}
               animate={{
                 clipPath:
@@ -184,7 +151,7 @@ export default function JoinGame() {
               }}
               transition={{ duration: 3.65, ease: [0.32, 0, 0.67, 0] }}
             >
-              <h1 className="font-spicyRice text-7xl font-bold text-center">
+              <h1 className="font-industrial text-8xl font-bold text-center tracking-wider">
                 CODECTIONS
               </h1>
             </motion.div>
@@ -205,11 +172,11 @@ export default function JoinGame() {
               <input
                 {...register("playerName")}
                 placeholder="Enter your name"
-                className="border px-4 p-2 w-full rounded-full text-black focus:outline-primary"
-                autocomplete="off"
+                className="border-2 border-industrial-steel px-4 p-3 w-full rounded-lg text-industrial-charcoal bg-industrial-steam/90 focus:outline-none focus:border-industrial-copper font-mechanical placeholder-industrial-smoke"
+                autoComplete="off"
               />
               {errors.playerName && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="text-industrial-fire text-sm mt-1 font-mechanical">
                   {errors.playerName.message}
                 </p>
               )}
@@ -218,20 +185,20 @@ export default function JoinGame() {
               <input
                 {...register("teamName")}
                 placeholder="Enter team name"
-                className="border px-4 p-2 w-full rounded-full text-black focus:outline-primary"
-                autocomplete="off"
+                className="border-2 border-industrial-steel px-4 p-3 w-full rounded-lg text-industrial-charcoal bg-industrial-steam/90 focus:outline-none focus:border-industrial-copper font-mechanical placeholder-industrial-smoke"
+                autoComplete="off"
               />
               {errors.teamName && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="text-industrial-fire text-sm mt-1 font-mechanical">
                   {errors.teamName.message}
                 </p>
               )}
             </div>
             <button
               type="submit"
-              className="bg-primary text-white hover:bg-primary/80 font-bold py-2 px-4 rounded-full w-full transition duration-300"
+              className="bg-industrial-copper text-industrial-steam hover:bg-industrial-brass font-bold py-3 px-6 rounded-lg w-full transition duration-300 shadow-xl border-2 border-industrial-steel font-industrial text-lg tracking-wide"
             >
-              Join Game
+              FIRE UP THE ENGINE
             </button>
           </motion.form>
         </div>

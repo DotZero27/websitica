@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
-import UnderwaterBackground from "./UndergroundBackground";
+import IndustrialBackground from "./IndustrialBackground";
 
 const QUESTION_DURATION = 60; // 1 minute in seconds
 const TOTAL_CATEGORIES = 4;
@@ -18,25 +18,25 @@ const POINTS_POSSIBLE = 1000;
 const MAX_LIVES = 4;
 
 const categoryColors = {
-  "Browser Dev Tools": "bg-gradient-to-br from-red-400 to-red-700",
-  "URL Components": "bg-gradient-to-br from-purple-500 to-violet-800",
-  "CSS Display Values": "bg-gradient-to-br from-yellow-400 to-yellow-600",
-  "Frontend Frameworks": "bg-gradient-to-br from-green-400 to-green-600",
+  "Browser Dev Tools": "bg-gradient-to-br from-industrial-fire to-industrial-rust",
+  "URL Components": "bg-gradient-to-br from-industrial-charcoal to-industrial-coal",
+  "CSS Display Values": "bg-gradient-to-br from-industrial-brass to-industrial-copper",
+  "Frontend Frameworks": "bg-gradient-to-br from-industrial-steel to-industrial-iron",
 
-  "Programming Languages": "bg-gradient-to-br from-red-400 to-red-700",
-  Databases: "bg-gradient-to-br from-purple-500 to-violet-800",
-  "Web APIs": "bg-gradient-to-br from-yellow-400 to-yellow-600",
-  "Web Security Threats": "bg-gradient-to-br from-green-400 to-green-600",
+  "Programming Languages": "bg-gradient-to-br from-industrial-fire to-industrial-rust",
+  Databases: "bg-gradient-to-br from-industrial-charcoal to-industrial-coal",
+  "Web APIs": "bg-gradient-to-br from-industrial-brass to-industrial-copper",
+  "Web Security Threats": "bg-gradient-to-br from-industrial-steel to-industrial-iron",
 
-  "API Authentication": "bg-gradient-to-br from-red-400 to-red-700",
-  "Mobile Frameworks": "bg-gradient-to-br from-purple-500 to-violet-800",
-  "CSS Units": "bg-gradient-to-br from-yellow-400 to-yellow-600",
-  "JavaScript Concepts": "bg-gradient-to-br from-green-400 to-green-600",
+  "API Authentication": "bg-gradient-to-br from-industrial-fire to-industrial-rust",
+  "Mobile Frameworks": "bg-gradient-to-br from-industrial-charcoal to-industrial-coal",
+  "CSS Units": "bg-gradient-to-br from-industrial-brass to-industrial-copper",
+  "JavaScript Concepts": "bg-gradient-to-br from-industrial-steel to-industrial-iron",
 
-  "Protocols": "bg-gradient-to-br from-red-400 to-red-700",
-  "Backend Frameworks": "bg-gradient-to-br from-purple-500 to-violet-800",
-  "Frontend Toolkits": "bg-gradient-to-br from-yellow-400 to-yellow-600",
-  "HTML Elements": "bg-gradient-to-br from-green-400 to-green-600",
+  "Protocols": "bg-gradient-to-br from-industrial-fire to-industrial-rust",
+  "Backend Frameworks": "bg-gradient-to-br from-industrial-charcoal to-industrial-coal",
+  "Frontend Toolkits": "bg-gradient-to-br from-industrial-brass to-industrial-copper",
+  "HTML Elements": "bg-gradient-to-br from-industrial-steel to-industrial-iron",
 
   "Version Control": "bg-gradient-to-br from-red-400 to-red-700",
   "Database Concepts": "bg-gradient-to-br from-purple-500 to-violet-800",
@@ -354,12 +354,12 @@ export default function PlayerGame({ player, team, onGameEnd }) {
       return (
         <div
           key={category}
-          className={`flex flex-col items-center justify-center w-full mb-2 py-4 text-white rounded uppercase border-white ${
-            categoryColors[category] || "bg-gray-600"
+          className={`flex flex-col items-center justify-center w-full mb-2 py-4 text-industrial-steam rounded-lg uppercase border-2 border-industrial-steel shadow-lg ${
+            categoryColors[category] || "bg-industrial-charcoal"
           }`}
         >
-          <p className="text-lg font-bold mb-1">{category}</p>
-          <p>{categoryItems.map((item) => item.text).join(", ")}</p>
+          <p className="text-lg font-bold mb-1 font-industrial text-center">{category}</p>
+          <p className="font-mechanical text-sm text-center">{categoryItems.map((item) => item.text).join(", ")}</p>
         </div>
       );
     });
@@ -373,7 +373,7 @@ export default function PlayerGame({ player, team, onGameEnd }) {
             key={index}
             className={cn(
               `w-10 h-10`,
-              index < lives ? "fill-red-500 text-white" : "text-gray-300",
+              index < lives ? "fill-industrial-fire text-industrial-fire" : "text-industrial-smoke",
               index === lives && shakeHeart && "animate-shake"
             )}
           />
@@ -387,15 +387,15 @@ export default function PlayerGame({ player, team, onGameEnd }) {
       (item) => !completedCategories.includes(item.category)
     );
     return (
-      <div className="grid grid-cols-4 gap-4 text-black">
+      <div className="grid grid-cols-4 gap-4">
         {remainingItems.map((item) => (
           <button
             key={item.id}
             onClick={() => handleItemClick(item)}
-            className={`py-6 rounded-md font-bold ${
+            className={`py-6 rounded-lg font-bold font-mechanical transition-all duration-200 border-2 shadow-lg ${
               selectedItems.includes(item)
-                ? "bg-white text-black"
-                : "text-white backdrop-blur-sm hover:scale-110 transition-transform duration-100 border bg-white/10 border-white"
+                ? "bg-industrial-copper text-industrial-steam border-industrial-brass transform scale-105"
+                : "text-industrial-steam hover:scale-105 hover:shadow-xl bg-industrial-charcoal/40 border-industrial-steel hover:border-industrial-copper"
             } ${
               gameStatus !== "active" ? "opacity-50 cursor-not-allowed" : ""
             }`}
@@ -411,8 +411,8 @@ export default function PlayerGame({ player, team, onGameEnd }) {
   if (gameStatus === "waiting") {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="p-8 text-blue-600 flex items-center rounded max-w-md gap-8 bg-white/80 backdrop-blur-sm">
-          <div className="text-lg">Waiting for the game to start...</div>
+        <div className="p-8 text-industrial-copper flex items-center rounded max-w-md gap-8 bg-industrial-steam/90">
+          <div className="text-lg">Firing up the machinery...</div>
           <Loader2 className="w-8 h-8 animate-spin" />
         </div>
       </div>
@@ -420,9 +420,9 @@ export default function PlayerGame({ player, team, onGameEnd }) {
   }
 
   return (
-    <div className="flex text-white min-h-screen">
-      <UnderwaterBackground />
-      <div className="flex-1 backdrop-blur-sm relative z-10 ">
+    <div className="flex text-industrial-steam min-h-screen">
+      <IndustrialBackground />
+      <div className="flex-1 relative z-10 ">
         <div className="max-w-4xl h-full w-full mx-auto px-4 flex flex-col items-center justify-center">
           <div
             className={cn(
@@ -432,23 +432,23 @@ export default function PlayerGame({ player, team, onGameEnd }) {
           >
             <div className="flex flex-col justify-between">
               <div className="relative flex flex-col h-full">
-                <h2 className="text-6xl mb-4 font-spicyRice font-bold uppercase">
-                  Codections
+                <h2 className="text-6xl mb-4 font-industrial font-bold uppercase tracking-wider text-industrial-copper">
+                  CODECTIONS
                 </h2>
-                <div className="pb-3 mb-2 w-3/4 italic font-bold leading-4 border-b">
-                  Discover 4 words that connect to the same theme
+                <div className="pb-3 mb-2 w-3/4 font-mechanical font-bold leading-4 border-b border-industrial-steel text-industrial-steam">
+                  Connect 4 words that share the same industrial theme
                 </div>
-                <div className="mb-4 flex items-center gap-4">
-                  <CircleUserRound className="w-10 h-10" />
+                <div className="mb-4 flex items-center gap-4 text-industrial-steam">
+                  <CircleUserRound className="w-10 h-10 text-industrial-copper" />
                   <div>
-                    <p className="text-sm">
-                      <span>Team</span> {team.name}
+                    <p className="text-sm font-mechanical text-industrial-copper">
+                      <span>FACTORY TEAM</span> {team.name}
                     </p>
-                    <p className="text-4xl font-bold">{player.name}</p>
+                    <p className="text-4xl font-bold font-industrial">{player.name}</p>
                   </div>
                 </div>
-                <div className="flex gap-2 text-5xl font-bold items-center">
-                  <Timer className="w-10 h-10" /> {Math.floor(timeLeft / 60)}:
+                <div className="flex gap-2 text-5xl font-bold items-center text-industrial-steam font-mechanical">
+                  <Timer className="w-10 h-10 text-industrial-fire" /> {Math.floor(timeLeft / 60)}:
                   {(timeLeft % 60).toString().padStart(2, "0")}
                 </div>
                 {renderLives()}
@@ -459,17 +459,17 @@ export default function PlayerGame({ player, team, onGameEnd }) {
                   disabled={gameStatus === "completed"}
                   variant="outline"
                   onClick={deselectAll}
-                  className="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-400"
+                  className="w-full h-12 bg-industrial-steam/20 hover:bg-industrial-steam/30 text-industrial-steam border-industrial-steel font-mechanical"
                 >
-                  <X className="mr-2 w-5 h-5" /> Deselect All
+                  <X className="mr-2 w-5 h-5" /> CLEAR ALL
                 </Button>
                 <Button
                   disabled={gameStatus === "completed"}
                   variant="outline"
                   onClick={shuffleGrid}
-                  className="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-400"
+                  className="w-full h-12 bg-industrial-steam/20 hover:bg-industrial-steam/30 text-industrial-steam border-industrial-steel font-mechanical"
                 >
-                  <Shuffle className="mr-3 w-4 h-4" /> Shuffle
+                  <Shuffle className="mr-3 w-4 h-4" /> SHUFFLE
                 </Button>
               </div>
             </div>
@@ -486,20 +486,20 @@ export default function PlayerGame({ player, team, onGameEnd }) {
             </div>
           </div>
           {gameStatus === "completed" && (
-            <div className="mt-8">
-              <p className="font-spicyRice text-5xl uppercase">
-                Game completed
+            <div className="mt-8 text-center">
+              <p className="font-industrial text-5xl uppercase text-industrial-copper tracking-wider">
+                FACTORY COMPLETE
               </p>
-              <p className="text-center">
-                Categories Found: {completedCategories.length} /{" "}
+              <p className="text-center font-mechanical text-lg text-industrial-steam mt-2">
+                Production Lines Found: {completedCategories.length} /{" "}
                 {TOTAL_CATEGORIES}
               </p>
               <Button
                 variant="outline"
-                className="mt-4 w-full bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-300"
+                className="mt-4 w-full bg-industrial-steam/20 hover:bg-industrial-steam/30 text-industrial-steam border-industrial-steel font-mechanical text-lg"
                 onClick={onGameEnd}
               >
-                Next
+                RETURN TO FACTORY
               </Button>
             </div>
           )}

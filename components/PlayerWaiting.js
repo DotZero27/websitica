@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Fish, Waves, Loader2 } from "lucide-react";
+import { ArrowLeft, Cog, Factory, Loader2 } from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "./ui/button";
 import { motion } from "framer-motion";
-import UnderwaterBackground from "./UndergroundBackground";
+import IndustrialBackground from "./IndustrialBackground";
 
 const easing = [0.22, 1, 0.36, 1];
 
@@ -55,9 +55,9 @@ export default function PlayerWaiting({
       exit="exit"
       variants={variants}
       transition={{ duration: 0.4, type: "easeInOut" }}
-      className="min-h-screen flex relative lg:flex-row bg-gradient-to-br from-blue-300 to-blue-600 overflow-hidden"
+      className="min-h-screen flex relative lg:flex-row bg-gradient-to-br from-industrial-charcoal to-industrial-coal overflow-hidden"
     >
-      <UnderwaterBackground/>
+      <IndustrialBackground/>
       <div className="w-full flex items-center justify-center p-8 backdrop-blur-sm">
 
       {/* {upcomingSession && (
@@ -76,38 +76,38 @@ export default function PlayerWaiting({
       >
         <CardHeader className="relative">
           <div className="absolute top-0 left-0 w-full h-24 overflow-hidden">
-            <Waves className="text-blue-500 w-full h-full opacity-20" />
+            <Factory className="text-industrial-copper w-full h-full opacity-20" />
           </div>
           <CardTitle
-            className={`font-spicyRice text-3xl font-bold text-center text-blue-800 relative z-10`}
+            className={`font-industrial text-4xl font-bold text-center text-industrial-charcoal relative z-10 tracking-wider`}
           >
-            Waiting for Other Players
+            ENGINES WARMING UP
           </CardTitle>
-          <CardDescription className="text-center text-blue-600 relative z-10">
-            Get ready to dive!
+          <CardDescription className="text-center text-industrial-copper relative z-10 font-mechanical text-lg">
+            The machinery is starting up!
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center space-y-4">
-          <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
-          <p className="text-lg text-blue-700">
+          <Cog className="w-16 h-16 text-industrial-copper animate-spin" />
+          <p className="text-lg text-industrial-charcoal font-mechanical">
             Time elapsed: {waitingTime} seconds
           </p>
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-4">
-          <p className="text-sm text-blue-600 flex items-center">
-            <Fish className="mr-2" size={16} />
+          <p className="text-sm text-industrial-copper flex items-center">
+            <Cog className="mr-2" size={16} />
             {message ? (
-              <span className="mb-4 text-blue-600">{message}</span>
+              <span className="mb-4 text-industrial-copper font-mechanical">{message}</span>
             ) : (
-              "The game will start once all players are ready"
+              <span className="font-mechanical">The engines will start once all workers are ready</span>
             )}
           </p>
           <Button
             onClick={onLogout}
             variant="outline"
-            className="w-full bg-red-100 hover:bg-red-200 text-red-600 border-red-300"
+            className="w-full bg-industrial-fire/20 hover:bg-industrial-fire/30 text-industrial-fire border-industrial-fire font-mechanical"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" /> Quit / Change Details
+            <ArrowLeft className="mr-2 h-4 w-4" /> LEAVE FACTORY / CHANGE DETAILS
           </Button>
         </CardFooter>
       </Card>
