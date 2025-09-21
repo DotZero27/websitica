@@ -24,8 +24,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.className} ${spicyRice.variable} bg-gradient-to-br from-blue-300 to-blue-600 overflow-hidden`}>
-        <Providers>{children}</Providers>
+       <body className={`${geistSans.className} ${spicyRice.variable} overflow-hidden 
+              bg-gradient-to-br from-industrial-charcoal via-industrial-iron to-industrial-coal`}>
+          <Providers>{children}</Providers>
       </body>
     </html>
   );
