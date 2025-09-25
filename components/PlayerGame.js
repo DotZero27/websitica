@@ -94,6 +94,7 @@ export default function PlayerGame({ player, team, onGameEnd }) {
       .from("quiz_sessions")
       .select("*")
       .eq("status", "active")
+      .eq("lab", team.lab)
       .order("start_time", { ascending: false })
       .limit(1)
       .single();
@@ -132,6 +133,7 @@ export default function PlayerGame({ player, team, onGameEnd }) {
         .from("quiz_sessions")
         .select("*")
         .eq("id", payload.new.id)
+        .eq("lab", team.lab)
         .single();
 
       if (activeSession) {
@@ -140,17 +142,16 @@ export default function PlayerGame({ player, team, onGameEnd }) {
           startGame(activeSession);
         }
       }
-    } else if (payload.new.status === "completed") {
-      // If any session is completed, check if it's the one we're currently playing
-      const { data: currentActiveSession } = await supabase
-        .from("quiz_sessions")
-        .select("*")
-        .eq("status", "active")
-        .order("start_time", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (!currentActiveSession || currentActiveSession.id === payload.new.id) {
+      } else if (payload.new.status === "completed") {
+        // If any session is completed, check if it's the one we're currently playing
+        const { data: currentActiveSession } = await supabase
+          .from("quiz_sessions")
+          .select("*")
+          .eq("status", "active")
+          .eq("lab", team.lab)
+          .order("start_time", { ascending: false })
+          .limit(1)
+          .single();      if (!currentActiveSession || currentActiveSession.id === payload.new.id) {
         // If there's no active session or the completed session is the one we're playing
         endGame();
       }

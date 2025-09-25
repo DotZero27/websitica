@@ -17,7 +17,7 @@ const schema = z.object({
   teamName: z.string().min(2, "Team name must be at least 2 characters"),
 });
 
-export default function JoinGame() {
+export default function JoinGame({ lab = null }) {
   const [animationStep, setAnimationStep] = useState(0);
 
   const router = useRouter();
@@ -37,16 +37,29 @@ export default function JoinGame() {
   };
 
   const joinGame = async (playerName, teamName) => {
-    let { data: teamData, error: teamError } = await supabase
+    // First check if team name already exists globally (across all labs)
+    const { data: existingTeam, error: existingTeamError } = await supabase
       .from("teams")
       .select("*")
       .eq("name", teamName)
       .single();
 
+    if (existingTeam && existingTeam.lab !== lab) {
+      alert(`Team name "${teamName}" is already taken in Lab ${existingTeam.lab}. Please choose a different team name.`);
+      return;
+    }
+
+    let { data: teamData, error: teamError } = await supabase
+      .from("teams")
+      .select("*")
+      .eq("name", teamName)
+      .eq("lab", lab)
+      .single();
+
     if (teamError && teamError.code === "PGRST116") {
       const { data, error } = await supabase
         .from("teams")
-        .insert({ name: teamName, score: 0 })
+        .insert({ name: teamName, score: 0, lab: lab })
         .select()
         .single();
 
