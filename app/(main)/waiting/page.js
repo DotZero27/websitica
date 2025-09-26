@@ -11,11 +11,12 @@ export default function PlayerWaitingPage() {
   const [message, setMessage] = useState("");
   const router = useRouter();
 
-  const checkSessionStatus = useCallback(async (playerId) => {
+  const checkSessionStatus = useCallback(async (playerId, teamData) => {
     const { data: sessionData, error } = await supabase
       .from("quiz_sessions")
       .select("*")
       .eq("status", "active")
+      .eq("lab", teamData.lab)
       .order("start_time", { ascending: false })
       .limit(1)
       .single();
@@ -23,7 +24,7 @@ export default function PlayerWaitingPage() {
     if (error) {
       if (error.code === 'PGRST116') {
         // No active session, check for upcoming
-        await checkForUpcomingSession();
+        await checkForUpcomingSession(teamData);
       } else {
         console.error("Error checking session status:", error);
       }
@@ -47,11 +48,12 @@ export default function PlayerWaitingPage() {
     }
   }, [router]);
 
-  const checkForUpcomingSession = async () => {
+  const checkForUpcomingSession = async (teamData) => {
     const { data, error } = await supabase
       .from("quiz_sessions")
       .select("*")
       .eq("status", "scheduled")
+      .eq("lab", teamData.lab)
       .order("start_time", { ascending: true })
       .limit(1)
       .single();
@@ -114,7 +116,7 @@ export default function PlayerWaitingPage() {
       const isValid = await verifyPlayerData(playerData, teamData);
       
       if (isValid) {
-        checkSessionStatus(playerData.id);
+        checkSessionStatus(playerData.id, teamData);
       } else {
         handleLogout();
       }
@@ -130,10 +132,10 @@ export default function PlayerWaitingPage() {
         "postgres_changes",
         { event: "*", schema: "public", table: "quiz_sessions" },
         (payload) => {
-          if (payload.new.status === "active" && player) {
-            checkSessionStatus(player.id);
+          if (payload.new.status === "active" && player && team && payload.new.lab === team.lab) {
+            checkSessionStatus(player.id, team);
           }
-          if (payload.new.status === "scheduled") {
+          if (payload.new.status === "scheduled" && team && payload.new.lab === team.lab) {
             setUpcomingSession(payload.new);
           }
         }

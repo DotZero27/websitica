@@ -19,11 +19,32 @@ module.exports = {
   	extend: {
 		backgroundImage:{
 			'bgImage': "url('../assets/bgImage2.png')",
+			'industrial-cityscape': "url('../assets/industrial-cityscape.jpg')",
+			'steam-texture': "url('../assets/steam-texture.png')",
 		},
   		fontFamily: {
-  			spicyRice: 'var(--font-spicyRice)'
+  			spicyRice: 'var(--font-spicyRice)',
+			industrial: ['Bebas Neue', 'Oswald', 'sans-serif'],
+			mechanical: ['Orbitron', 'monospace']
   		},
   		colors: {
+			// Industrial Revolution Theme Colors
+			industrial: {
+				'charcoal': '#2C2C2C',
+				'coal': '#1A1A1A',  
+				'copper': '#B87333',
+				'brass': '#E5C200',
+				'steam': '#F5F5F5',
+				'iron': '#404040',
+				'rust': '#B7410E',
+				'fire': '#FF6B35',
+				'smoke': '#696969',
+				'steel': '#71797E',
+				'bronze': '#CD7F32',
+				'pewter': '#899499',
+				'gunmetal': '#2a3439',
+				'amber': '#FFBF00'
+			},
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',

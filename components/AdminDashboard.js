@@ -14,13 +14,14 @@ export default function AdminDashboard() {
   const [categories, setCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [realtimeSubmissions, setRealtimeSubmissions] = useState([]);
+  const [selectedLab, setSelectedLab] = useState(1); // Default to lab 1
 
   useEffect(() => {
     fetchTeams();
     fetchSessions();
     fetchCategories();
     subscribeToUpdates();
-  }, []);
+  }, [selectedLab]);
 
   const fetchTeams = async () => {
     const { data, error } = await supabase
@@ -36,6 +37,7 @@ export default function AdminDashboard() {
     const { data, error } = await supabase
       .from("quiz_sessions")
       .select("*")
+      .eq("lab", selectedLab)
       .order("start_time", { ascending: false });
 
     if (error) console.error("Error fetching sessions:", error);
@@ -141,6 +143,7 @@ export default function AdminDashboard() {
         category2: selectedCategories[1],
         category3: selectedCategories[2],
         category4: selectedCategories[3],
+        lab: selectedLab,
       })
       .select()
       .limit(1)
@@ -245,8 +248,8 @@ export default function AdminDashboard() {
   };
 
   const deleteAllTeams = async () => {
-    await supabase.from("teams").delete().neq("id", 1);
-    setTeams([]);
+    await supabase.from("teams").delete().eq("lab", selectedLab);
+    fetchTeams(); // Refresh the teams list
   };
 
   return (
@@ -254,6 +257,36 @@ export default function AdminDashboard() {
       <div className="flex w-full justify-between items-center">
         <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
         <Logout />
+      </div>
+
+      {/* Lab Selector */}
+      <div className="mb-6 bg-gray-100 p-4 rounded-lg">
+        <h3 className="text-lg font-semibold mb-2">Select Lab</h3>
+        <div className="flex gap-4">
+          <button
+            onClick={() => setSelectedLab(1)}
+            className={`px-4 py-2 rounded font-bold ${
+              selectedLab === 1
+                ? "bg-blue-500 text-white"
+                : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+            }`}
+          >
+            Lab 1
+          </button>
+          <button
+            onClick={() => setSelectedLab(2)}
+            className={`px-4 py-2 rounded font-bold ${
+              selectedLab === 2
+                ? "bg-blue-500 text-white"
+                : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+            }`}
+          >
+            Lab 2
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 mt-2">
+          Currently managing: <strong>Lab {selectedLab}</strong>
+        </p>
       </div>
 
       <div className="mb-8">
@@ -295,7 +328,7 @@ export default function AdminDashboard() {
         className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
         onClick={deleteAllTeams}
       >
-        Delete All Teams
+        Delete All Teams (Lab {selectedLab})
       </button>
       <div className="flex gap-4 justify-between">
         <div className="w-full">
@@ -409,20 +442,22 @@ export default function AdminDashboard() {
         </div>
 
         <div className="w-full">
-          <h3 className="text-xl font-semibold mb-2">Overall Team Rankings</h3>
+          <h3 className="text-xl font-semibold mb-2">Overall Team Rankings (All Labs)</h3>
           <table className="w-full">
             <thead>
               <tr>
                 <th className="text-left">Team</th>
                 <th className="text-left">Score</th>
+                <th className="text-left">Lab</th>
                 <th className="text-left">Players</th>
               </tr>
             </thead>
             <tbody>
               {teams.map((team) => (
-                <tr key={team.id}>
+                <tr key={team.id} className={team.lab === selectedLab ? "bg-blue-50" : ""}>
                   <td>{team.name}</td>
                   <td>{team.score}</td>
+                  <td>Lab {team.lab}</td>
                   <td>{team.player_count}</td>
                 </tr>
               ))}
